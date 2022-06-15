@@ -1,0 +1,29 @@
+{
+  "name": "maggybot",
+  "version": "1.0.0",
+  "description": "a simple bot",
+  "main": "index.js",
+  "dependencies": {
+    "@discordjs/opus": "github:discordjs/opus",
+    "@discordjs/voice": "^0.10.0",
+    "chalk": "^5.0.1",
+    "colors": "^1.4.0",
+    "discord-nsfw": "^1.3.0",
+    "discord-tts": "^1.2.1",
+    "discord.js": "^13.8.0",
+    "dotenv": "^10.0.0",
+    "ffmpeg-static": "^4.4.1",
+    "node-fetch": "2.6.7",
+    "nodemon": "^2.0.16",
+    "require-dir": "^1.2.0",
+    "weather-js": "^2.0.0",
+    "wikipedia-js": "^0.0.6"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --no-deprecation index"
+  },
+  "author": "",
+  "license": "ISC",
+  "keywords": []
+}
