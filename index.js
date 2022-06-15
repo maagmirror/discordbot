@@ -35,8 +35,8 @@ let prefix = process.env.PREFIX;
 
 client.on('message', message => {
 
+	//if requester is a bot or no start with prefix
 	if (!message.content.startsWith(prefix) || message.author.bot) return;
-
 	
 	if (message.content.startsWith(prefix)){
 		console.log("[MENSAJE]".green + "[".green + message.guild.name.green +"]".green + (message.author.username).blue + " " + message.content);
@@ -46,9 +46,9 @@ client.on('message', message => {
 	const command = args.shift().toLowerCase();
 
 	if (!client.commands.has(command)){
-    message.reply('Disculpá, pero ese comando no existe!');
-    return
-  };
+		message.reply('Disculpá, pero ese comando no existe!');
+		return
+	};
 
 	try {
 		client.commands.get(command).execute(message, args);
