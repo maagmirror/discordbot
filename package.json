@@ -4,7 +4,6 @@
   "description": "a simple bot",
   "main": "index.js",
   "dependencies": {
-    "@discordjs/opus": "github:discordjs/opus",
     "@discordjs/voice": "^0.10.0",
     "chalk": "^5.0.1",
     "colors": "^1.4.0",
