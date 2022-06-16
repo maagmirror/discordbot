@@ -7,7 +7,7 @@ const client = new Client({
 });
 
 client.on('ready', () => {
-  client.user.setActivity(`Generando Bugs en ${client.guilds.cache.size} servidor `, { type: "LISTENING" })
+  client.user.setActivity(`Generar Bugs en ${client.guilds.cache.size} servidores `, { type: "PLAYING" })
   console.log(`Logged in as`, `${client.user.tag}`);
 })
 
@@ -40,7 +40,7 @@ client.on('message', message => {
 	if (!message.content.toLowerCase().startsWith(prefix.toLowerCase()) || message.author.bot) return;
 	
 	if (message.content.startsWith(prefix)){
-		console.log("[MENSAJE]".green + "[".green + message.guild.name.green +"]".green + (message.author.username).blue + " " + message.content);
+		console.log("[MENSAJE]".green + "[".green + message.guild.name.green +"] ".green + (message.author.username).blue + ": " + message.content);
 	}
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/);
