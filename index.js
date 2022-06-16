@@ -32,7 +32,6 @@ require('dotenv').config()
 // Set the prefix
 let prefix = process.env.PREFIX;
 
-
 client.on('message', message => {
 
 	//if requester is a bot or no start with prefix
