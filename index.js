@@ -36,7 +36,8 @@ let prefix = process.env.PREFIX;
 client.on('message', message => {
 
 	//if requester is a bot or no start with prefix
-	if (!message.content.startsWith(prefix) || message.author.bot) return;
+	//and get the prefix in lowercase
+	if (!message.content.toLowerCase().startsWith(prefix.toLowerCase()) || message.author.bot) return;
 	
 	if (message.content.startsWith(prefix)){
 		console.log("[MENSAJE]".green + "[".green + message.guild.name.green +"]".green + (message.author.username).blue + " " + message.content);

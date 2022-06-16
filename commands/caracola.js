@@ -10,7 +10,7 @@ module.exports = {
         "Sí definitivamente",
         "Puedes confiar en ello",
         "Como yo lo veo, sí",
-        "Más probable",
+        "Muy probable",
         "Perspectivas buena",
         "Sí",
         "Las señales apuntan a que sí",
