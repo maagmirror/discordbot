@@ -11,10 +11,10 @@ module.exports = {
         for (const file of commandFiles) {
             const command = require(`../commands/${file}`);
             // message.channel.send("Maggy " + command.name + " Descripción: " + command.description);
-            comandos = comandos + ("maggy " + command.name + "\n" + " Descripción: " + command.description + "\n" + "\n");
+            comandos = comandos + ("`maggy " + command.name + "`" + " - " + command.description + "\n");
         }
 
-        message.author.send("```" + comandos + "```");
+        message.author.send(comandos);
         message.reply("Te respondí al privado UwU");
         
 	},
