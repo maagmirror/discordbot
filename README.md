@@ -13,7 +13,15 @@ Install MaggyBot with npm
   npm start
 ```
 
+## Remember
+
+create a file called .env and save these variables
+
+```bash
+  DISCORD_TOKEN=your_discord_token
+  PREFIX=bot_prefix
+```
+
 ## Support
 
 For support, email marcos@nibiru.com.uy
-
