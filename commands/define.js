@@ -1,6 +1,6 @@
 module.exports = {
 	name: 'define',
-	description: 'define algo, pero ahora no, ta roto',
+	description: 'define algo, pero ahora no, ta roto, en reparación',
 	execute(message, args) {
 
         // var wikipedia = require("wikipedia-js");
