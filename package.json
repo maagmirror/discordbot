@@ -16,7 +16,8 @@
     "node-opus": "^0.3.3",
     "opus": "^0.0.0",
     "require-dir": "^1.2.0",
-    "weather-js": "^2.0.0"
+    "weather-js": "^2.0.0",
+    "wikipedia": "^2.0.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
