@@ -14,8 +14,11 @@ module.exports = {
             comandos = comandos + ("`maggy " + command.name + "`" + " - " + command.description + "\n");
         }
 
-        message.author.send(comandos);
-        message.reply("Te respondí al privado UwU");
+        message.author.send(comandos).catch(error => {
+            message.channel.send("No puedo responderte al privado :c");
+            message.reply(comandos);
+        });
         
+        message.reply("Te respondí al privado UwU");
 	},
 };
