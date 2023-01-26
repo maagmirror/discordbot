@@ -2,6 +2,11 @@ var colors = require('colors');
 const fs = require('fs');
 const Discord = require('discord.js');
 const { Client, Intents, Attachment, Message, MessageEmbed } = require("discord.js");
+
+module.exports = Object.freeze({
+    weatherapikey: 'yourapikeyhere'
+});
+
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
 });
