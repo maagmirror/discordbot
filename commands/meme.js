@@ -10,7 +10,7 @@ module.exports = {
         const starts = async function(){
             async function getImagesReddit() {
                 const fetch = require('node-fetch');
-                const response = await fetch(`https://meme-api.herokuapp.com/gimme/Divertido`);
+                const response = await fetch("https://meme-api.com/gimme/divertido");
                 const data = await response.json();
                 const images = data.url;
                 return images;
