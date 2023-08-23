@@ -20,9 +20,10 @@ create a file called .env and save these variables
 ```bash
   DISCORD_TOKEN=your_discord_token
   PREFIX=bot_prefix
+  WEATHERAPI=
   
   update 2023
-  - add new constant to index.js for weather api: weatherapi.com
+  - add new constant to ENV for weather api: weatherapi.com
 ```
 
 ## Support
