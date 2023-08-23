@@ -3,14 +3,21 @@ module.exports = {
     description: "Comprueba un pronóstico del tiempo",
     async execute(message, args){
 
+        if (args.length < 1) {
+            message.reply("Por favor proporciona una ubicación para comprobar el clima.");
+            return;
+        }
+
         const starts = async function(){
 
-            var constants = require('../index.js');
+            // var constants = require('../index.js');
             const Discord = require('discord.js');
+
+            const weatherapi = process.env.WEATHERAPI;
 
             async function getWeather() {
                 const fetch = require('node-fetch');
-                const response = await fetch("http://api.weatherapi.com/v1/current.json?key="+ constants.weatherapikey +"&q=" + args[0] +"&aqi=no&lang=es");
+                const response = await fetch("http://api.weatherapi.com/v1/current.json?key="+ weatherapi +"&q=" + args[0] +"&aqi=no&lang=es");
                 const data = await response.json();
                 const dataWeather = data;
                 return dataWeather;
