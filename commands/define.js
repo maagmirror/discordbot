@@ -1,37 +1,48 @@
+'use strict';
+
+const wiki = require('wikipedia');
+
 module.exports = {
 	name: 'define',
-	description: 'maggy define contrato, de momento solo define cosas en ingles',
-	execute(message, args) {
+	description: 'maggy define contrato — busca en Wikipedia',
+	options: [
+		{
+			name: 'termino',
+			description: 'Qué querés que busque',
+			type: 3, // STRING
+			required: true,
+			rest: true,
+		},
+	],
+	async run(ctx) {
+		const termino = ctx.arg('termino');
 
-        var query = args[0];
+		if (!termino) {
+			await ctx.reply('Decime qué buscar. Ej: `define contrato`');
+			return;
+		}
 
-        const wiki = require('wikipedia');
+		await ctx.defer();
 
+		try {
+			await wiki.setLang('es');
 
-        const starts = async function(){
+			const resultados = await wiki.search(termino, { limit: 1 });
+			const titulo = resultados?.results?.[0]?.title ?? termino;
 
-            async function getDefinition() {
-                try {
-                    const page = await wiki.page(query);
-                    //Response of type @Page object
-                    var summary = await page.summary();
+			const pagina = await wiki.page(titulo, { autoSuggest: true });
+			const resumen = await pagina.summary();
 
-                    // console.log(summary.extract);
-                    return summary.extract;
-                    //Response of type @wikiSummary - contains the intro and the main image
-                } catch (error) {
-                    return error;
-                    //=> Typeof wikiError
-                }
-            }
+			if (!resumen?.extract) throw new Error('sin extracto');
 
-            const data = await getDefinition();
-
-            message.reply(data);
-        }
-
-        starts();
-
-        // return message.reply('ta roto este comando capo, no preguntes que me pongo tiste :c' + '\n' + 'https://c.tenor.com/qzidRKHIauwAAAAd/tas-tiste-emilia-mernes.gif');
-    }
+			await ctx.reply({
+				content: `**${resumen.title}**\n${resumen.extract}\n<${
+					resumen.content_urls?.desktop?.page ?? ''
+				}>`,
+			});
+		} catch (error) {
+			console.error('[define]', error.message);
+			await ctx.reply(`No encontré nada sobre "${termino}" en Wikipedia :c`);
+		}
+	},
 };

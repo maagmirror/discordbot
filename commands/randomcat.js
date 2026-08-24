@@ -1,22 +1,24 @@
+'use strict';
+
 module.exports = {
 	name: 'randomcat',
 	description: 'un gatito random!',
-	execute(message, args) {
-        // https://dog.ceo/api/breeds/image/random
+	async run(ctx) {
+		await ctx.defer();
 
-        const starts = async function(){
-            async function getImagesReddit() {
-                const fetch = require('node-fetch');
-                const response = await fetch(`https://dog.ceo/api/breeds/image/random`);
-                const data = await response.json();
-                const images = data.message;
-                return images;
-            }
+		try {
+			const respuesta = await fetch('https://api.thecatapi.com/v1/images/search', {
+				signal: AbortSignal.timeout(10_000),
+			});
+			if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
-            const img = await getImagesReddit();
-            return message.reply(img);
-        }
-        starts();
+			const [gato] = await respuesta.json();
+			if (!gato?.url) throw new Error('respuesta sin url');
 
+			await ctx.reply(gato.url);
+		} catch (error) {
+			console.error('[randomcat]', error.message);
+			await ctx.reply('La API de gatitos no responde :c');
+		}
 	},
 };

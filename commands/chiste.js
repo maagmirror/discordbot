@@ -1,35 +1,27 @@
-// https://v2.jokeapi.dev/joke/Any?lang=es
-
-const https = require('https');
-const Discord = require('discord.js');
+'use strict';
 
 module.exports = {
-    name: 'chiste',
-    description: 'Cuenta un chiste',
-    // usage: 'maggy chiste',
-    execute(message, args) {
+	name: 'chiste',
+	description: 'Cuenta un chiste',
+	async run(ctx) {
+		await ctx.defer();
 
-        const starts = async function(){
-            async function getJokes() {
-                const fetch = require('node-fetch');
-                const response = await fetch(`https://v2.jokeapi.dev/joke/Any?lang=es`);
-                const data = await response.json();
+		try {
+			const respuesta = await fetch('https://v2.jokeapi.dev/joke/Any?lang=es', {
+				signal: AbortSignal.timeout(10_000),
+			});
+			if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
-                let joke = "";
+			const data = await respuesta.json();
+			if (data.error) throw new Error(data.message ?? 'jokeapi devolvió error');
 
-                if (data.type == "single"){
-                    joke = data.joke;
-                }else{
-                    joke = data.setup;
-                    joke = joke + ("\n" + data.delivery);
-                }
+			const chiste =
+				data.type === 'single' ? data.joke : `${data.setup}\n${data.delivery}`;
 
-                return joke;
-            }
-
-            const jajas = await getJokes();
-            return message.reply(jajas);
-        }
-        starts();
-    },
-}
+			await ctx.reply(chiste);
+		} catch (error) {
+			console.error('[chiste]', error.message);
+			await ctx.reply('No se me ocurre nada, la API de chistes no responde :c');
+		}
+	},
+};

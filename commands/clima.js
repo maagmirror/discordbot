@@ -1,49 +1,72 @@
+'use strict';
+
+const { EmbedBuilder } = require('discord.js');
+
 module.exports = {
-    name: "clima",
-    description: "Comprueba un pronóstico del tiempo",
-    async execute(message, args){
+	name: 'clima',
+	description: 'Comprueba un pronóstico del tiempo',
+	options: [
+		{
+			name: 'ubicacion',
+			description: 'Ciudad o localidad. Ej: Montevideo',
+			type: 3, // STRING
+			required: true,
+			rest: true,
+		},
+	],
+	async run(ctx) {
+		const apiKey = process.env.WEATHERAPI;
 
-        if (args.length < 1) {
-            message.reply("Por favor proporciona una ubicación para comprobar el clima.");
-            return;
-        }
+		if (!apiKey) {
+			await ctx.reply(
+				'No tengo configurada la API key del clima (WEATHERAPI en el .env).',
+			);
+			return;
+		}
 
-        const starts = async function(){
+		const ubicacion = ctx.arg('ubicacion');
 
-            // var constants = require('../index.js');
-            const Discord = require('discord.js');
+		if (!ubicacion) {
+			await ctx.reply('Por favor proporcioná una ubicación para comprobar el clima.');
+			return;
+		}
 
-            const weatherapi = process.env.WEATHERAPI;
+		await ctx.defer();
 
-            async function getWeather() {
-                const fetch = require('node-fetch');
-                const response = await fetch("http://api.weatherapi.com/v1/current.json?key="+ weatherapi +"&q=" + args[0] +"&aqi=no&lang=es");
-                const data = await response.json();
-                const dataWeather = data;
-                return dataWeather;
-            }
+		try {
+			const url = new URL('https://api.weatherapi.com/v1/current.json');
+			url.searchParams.set('key', apiKey);
+			url.searchParams.set('q', ubicacion);
+			url.searchParams.set('aqi', 'no');
+			url.searchParams.set('lang', 'es');
 
-            const data = await getWeather();
+			const respuesta = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+			const data = await respuesta.json();
 
-            if (data.error){
-                message.channel.send(data.error.message);
-            }
+			if (data.error) {
+				await ctx.reply(data.error.message);
+				return;
+			}
+			if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
-            const weatherinfo = new Discord.MessageEmbed()
+			const embed = new EmbedBuilder()
+				.setAuthor({ name: `Pronóstico del tiempo para ${data.location.name}` })
+				.setDescription(`**${data.current.condition.text}**`)
+				.setThumbnail(`https:${data.current.condition.icon}`)
+				.setColor(0x111111)
+				.addFields(
+					{ name: 'Tipo de grado', value: 'Celsius', inline: true },
+					{ name: 'Temperatura', value: `${data.current.temp_c}°`, inline: true },
+					{ name: 'Se siente como', value: `${data.current.feelslike_c}°`, inline: true },
+					{ name: 'Humedad', value: `${data.current.humidity}%`, inline: true },
+					{ name: 'Viento', value: `${data.current.wind_kph} km/h`, inline: true },
+				)
+				.setFooter({ text: `${data.location.region}, ${data.location.country}` });
 
-            .setDescription(`**${data.current.condition.text}**`)
-            .setAuthor(`Pronóstico del tiempo para ${data.location.name}`)
-            .setThumbnail("https:" + data.current.condition.icon)
-            .setColor(0x111111)
-            // .addField('Timezone', `UTC${location.timezone}`, true)
-            .addField('Tipo de grado', 'Celsius', true)
-            .addField('Temperatura', `${data.current.temp_c}°`, true)
-            // .addField('Viento', data.winddisplay, true)
-            .addField('Se siente como', `${data.current.feelslike_c}°`, true)
-            .addField('Humedad', `${data.current.humidity}%`, true)
-
-            message.channel.send({ embeds: [weatherinfo] });
-        }
-        starts();
-    }
-}
+			await ctx.reply({ embeds: [embed] });
+		} catch (error) {
+			console.error('[clima]', error.message);
+			await ctx.reply('No pude consultar el clima ahora mismo :c');
+		}
+	},
+};
