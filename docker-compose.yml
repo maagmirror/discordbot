@@ -11,8 +11,15 @@ services:
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
       PREFIX: ${PREFIX:-maggy}
       WEATHERAPI: ${WEATHERAPI:-}
+      VOICE_DEBUG: ${VOICE_DEBUG:-}
+      YTDLP_PLAYER_CLIENTS: ${YTDLP_PLAYER_CLIENTS:-}
+      YTDLP_COOKIES: ${YTDLP_COOKIES:-}
+      YTDLP_EXTRA_ARGS: ${YTDLP_EXTRA_ARGS:-}
     volumes:
       - bot-data:/app/data
+      # Para destrabar el bloqueo de YouTube en un server: exportá las cookies
+      # y descomentá esto junto con YTDLP_COOKIES=/app/cookies.txt en el .env
+      # - ./cookies.txt:/app/cookies.txt:ro
     logging:
       driver: json-file
       options:
