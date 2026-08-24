@@ -1,32 +1,48 @@
 {
   "name": "maggybot",
-  "version": "1.0.1",
-  "description": "a simple bot",
+  "version": "2.0.0",
+  "description": "MaggyBot - bot de Discord con comandos de prefijo y slash commands",
   "main": "index.js",
-  "dependencies": {
-    "@discordjs/voice": "^0.10.0",
-    "chalk": "^5.0.1",
-    "colors": "^1.4.0",
-    "discord-nsfw": "^1.3.0",
-    "discord-tts": "^1.2.1",
-    "discord.js": "13.8.0",
-    "dotenv": "^10.0.0",
-    "ffmpeg-static": "^4.4.1",
-    "node-fetch": "2.6.7",
-    "node-opus": "^0.3.3",
-    "opus": "^0.0.0",
-    "require-dir": "^1.2.0",
-    "weather-js": "^2.0.0",
-    "wikipedia": "^2.0.0"
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
   },
   "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "deploy": "node deploy-commands.js",
+    "undeploy": "node deploy-commands.js --clear",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --no-deprecation index"
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f bot",
+    "docker:deploy": "docker compose run --rm deploy"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.19.2",
+    "discord-nsfw": "^1.3.0",
+    "discord-tts": "^1.2.2",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "ffmpeg-static": "^5.3.0",
+    "libsodium-wrappers": "^0.8.4",
+    "opusscript": "^0.1.1",
+    "picocolors": "^1.1.1",
+    "wikipedia": "^2.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   },
   "author": "",
   "license": "ISC",
   "keywords": [],
-  "devDependencies": {
-    "nodemon": "^2.0.20"
+  "nodemonConfig": {
+    "ignore": [
+      "data/*",
+      "mensajes.txt",
+      "node_modules/*"
+    ],
+    "ext": "js,json"
   }
 }
