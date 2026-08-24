@@ -148,3 +148,5 @@ dist
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+# Datos de runtime del bot (respuestas aprendidas)
+data/
