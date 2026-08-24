@@ -1,7 +1,10 @@
+'use strict';
+
 module.exports = {
 	name: 'ping',
 	description: 'Ping!',
-	execute(message, args) {
-		message.reply('Pong.');
+	async run(ctx) {
+		const latencia = Math.round(ctx.client.ws.ping);
+		await ctx.reply(`Pong. (${latencia} ms)`);
 	},
 };
