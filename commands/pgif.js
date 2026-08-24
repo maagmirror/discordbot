@@ -1,21 +1,9 @@
-module.exports = {
+'use strict';
+
+const { comandoNsfw } = require('../lib/nsfw');
+
+module.exports = comandoNsfw({
 	name: 'pgif',
 	description: 'NSFW gifs!',
-	execute(message, args) {
-        // https://meme-api.herokuapp.com/gimme/porn
-        if (message.channel.nsfw) {
-            const start = async function(){
-                // https://npm.io/package/discord-nsfw
-                const Discord = require("discord.js");
-                const NSFW = require("discord-nsfw");
-                const nsfw = new NSFW();
-
-                const image = await nsfw.pgif();
-                return message.reply(image);
-            }
-            start();
-        } else {
-            message.channel.send("Intenta eso, pero en un canal NSFW, aquí no puedo mandarte eso, degenerad@");
-        }
-    },
-};
+	metodo: ['pgif', 'anal'],
+});
