@@ -62,6 +62,7 @@ function loadCommands() {
 			}
 
 			client.commands.set(command.name, command);
+			command.init?.(client);
 		} catch (error) {
 			console.error(pc.red(`[comandos] error cargando ${file}:`), error.message);
 		}
