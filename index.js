@@ -1,146 +1,268 @@
-var colors = require('colors');
-const fs = require('fs');
-const Discord = require('discord.js');
-const { Client, Intents, Attachment, Message, MessageEmbed } = require("discord.js");
+'use strict';
 
-const client = new Client({
-	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
-});
+require('dotenv').config({ quiet: true });
 
-client.on('ready', () => {
-	client.user.setActivity(`Generar Bugs en ${client.guilds.cache.size} servidores `, { type: "PLAYING" })
-	console.log(`Logged in as`, `${client.user.tag}`);
-})
+const fs = require('node:fs');
+const path = require('node:path');
+const pc = require('picocolors');
+const {
+	Client,
+	Collection,
+	GatewayIntentBits,
+	Partials,
+	ActivityType,
+	MessageFlags,
+} = require('discord.js');
 
-client.on("guildCreate", guild => {
-	guild.owner.send('Gracias! Puedes usar maggy help para descubrir mis comandos.')
-});
+const { Ctx } = require('./lib/ctx');
+const respuestas = require('./lib/respuestas');
 
-client.commands = new Discord.Collection();
+const TOKEN = process.env.DISCORD_TOKEN;
+const PREFIX = (process.env.PREFIX ?? 'maggy').trim();
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	// set a new item in the Collection
-	// with the key as the command name and the value as the exported module
-	client.commands.set(command.name, command);
+if (!TOKEN) {
+	console.error(pc.red('Falta DISCORD_TOKEN. Copiá .env.example a .env y completalo.'));
+	process.exit(1);
+}
+if (!PREFIX) {
+	console.error(pc.red('PREFIX no puede estar vacío.'));
+	process.exit(1);
 }
 
-// Setup our environment variables via dotenv
-require('dotenv').config()
+const client = new Client({
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		// Privilegiado: hay que activarlo en el Developer Portal o el bot no lee
+		// el texto de los mensajes y ningún comando de prefijo responde.
+		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildVoiceStates,
+		GatewayIntentBits.DirectMessages,
+	],
+	partials: [Partials.Channel], // necesario para recibir DMs
+});
 
-// Set the prefix
-let prefix = process.env.PREFIX;
+client.commands = new Collection();
 
-client.on('message', message => {
+function loadCommands() {
+	const dir = path.join(__dirname, 'commands');
+	const files = fs.readdirSync(dir).filter((file) => file.endsWith('.js'));
 
-	//if requester is a bot or no start with prefix
-	//and get the prefix in lowercase
-	if (!message.content.toLowerCase().startsWith(prefix.toLowerCase()) || message.author.bot) return;
+	client.commands.clear();
 
-	if (message.content.startsWith(prefix)) {
-		console.log("[MENSAJE]".green + "[".green + message.guild.name.green + "] ".green + (message.author.username).blue + ": " + message.content);
-	}
-
-	const args = message.content.slice(prefix.length).trim().split(/ +/);
-	const command = args.shift().toLowerCase();
-
-	const pendingResponses = {};
-	const collectorTimeout = 30000; // Tiempo de espera para la respuesta del usuario en milisegundos
-
-	if (!client.commands.has(command)) {
-		// Obtén el contenido del mensaje sin el prefijo
-		const messageContentWithoutPrefix = message.content.slice(prefix.length);
-
-		// Lee el archivo existente (si existe)
-		let existingData = '';
+	for (const file of files) {
+		const full = path.join(dir, file);
 		try {
-			existingData = fs.readFileSync('mensajes.txt', 'utf8');
-		} catch (error) {
-			console.error('Error al leer el archivo:', error);
-		}
+			delete require.cache[require.resolve(full)];
+			const command = require(full);
 
-		if (!existingData.includes(`pregunta: '${messageContentWithoutPrefix}'`)) {
-			// Si el bot no tiene una respuesta, pregunta cómo debería responder
-			message.channel.send('No tengo una respuesta guardada para eso. ¿Cómo debería responder a esta pregunta?')
-				.then(responsePrompt => {
-					// Espera la respuesta del usuario
-					const filter = response => response.author.id === message.author.id && !response.author.bot;
-					const collector = message.channel.createMessageCollector(filter, { time: collectorTimeout });
-
-					collector.on('collect', (userResponse) => {
-						const responseContent = userResponse.content;
-
-						// Remover todas las instancias del prefijo en la respuesta
-						const cleanResponse = responseContent.replace(new RegExp(`${prefix}`, 'g'), '').trim();
-
-						// Verificar si la respuesta contiene el prefijo
-						if (responseContent.includes(prefix) || cleanResponse === '') {
-							userResponse.reply('Esa respuesta está mal y no será guardada.');
-							collector.stop();
-							return;
-						} else {
-							// Guardar la pregunta y la respuesta en el archivo
-							const formattedEntry = `pregunta: '${messageContentWithoutPrefix}' respuesta: '${cleanResponse}'\n`;
-							fs.appendFile('mensajes.txt', formattedEntry, (err) => {
-								if (err) {
-									console.error('Error al guardar el mensaje:', err);
-								}
-							});
-
-							// Guardar la respuesta del usuario en pendingResponses
-							pendingResponses[messageContentWithoutPrefix] = cleanResponse;
-
-							// Borra el mensaje de la pregunta original
-							responsePrompt.delete();
-
-							// Envía un mensaje de confirmación al usuario
-							userResponse.reply('¡Gracias por la respuesta! La guardaré para la próxima vez.');
-							collector.stop();
-						}
-
-					});
-
-					collector.on('end', (collected, reason) => {
-						if (reason === 'time') {
-							message.channel.send('Tiempo agotado. No se recibió respuesta :c');
-							// Borra el mensaje de la pregunta original si el tiempo se agota
-							responsePrompt.delete();
-						}
-					});
-				});
-		} else {
-			if (!existingData.includes(`pregunta: '${messageContentWithoutPrefix}'`)) {
-				// ... (código que maneja la interacción inicial)
-			} else {
-				const questionStart = existingData.indexOf(`pregunta: '${messageContentWithoutPrefix}'`);
-				const responseStart = existingData.indexOf("respuesta: '", questionStart) + 12;
-				const responseEnd = existingData.indexOf("'", responseStart);
-				const savedResponse = existingData.slice(responseStart, responseEnd);
-
-				if (pendingResponses[messageContentWithoutPrefix]) {
-					// Si hay una respuesta pendiente, envíala
-					message.channel.send(pendingResponses[messageContentWithoutPrefix]);
-				} else if (savedResponse && !savedResponse.includes("No tengo una respuesta guardada para eso.")) {
-					// Si hay una respuesta guardada válida, envíala
-					message.channel.send(savedResponse);
-				} else {
-					// No hay respuesta pendiente ni guardada, crea una
-					message.channel.send('Lo siento, no tengo respuestas en este momento.');
-				}
+			if (!command?.name || typeof command.run !== 'function') {
+				console.warn(pc.yellow(`[comandos] ${file} ignorado: falta name o run()`));
+				continue;
 			}
 
+			client.commands.set(command.name, command);
+		} catch (error) {
+			console.error(pc.red(`[comandos] error cargando ${file}:`), error.message);
 		}
+	}
 
+	return client.commands.size;
+}
+
+async function runCommand(command, ctx) {
+	if (command.nsfw && !ctx.isNsfw) {
+		return ctx.reply(
+			'Intentá eso, pero en un canal NSFW. Acá no puedo mandarte eso, degenerad@.',
+		);
+	}
+
+	if (command.guildOnly && !ctx.guild) {
+		return ctx.reply('Ese comando solo funciona dentro de un servidor.');
+	}
+
+	return command.run(ctx);
+}
+
+async function reportError(ctx, error) {
+	console.error(pc.red(`[error] comando "${ctx.command?.name}":`), error);
+	try {
+		await ctx.reply('Se me rompió algo ejecutando eso :c');
+	} catch {
+		/* el canal puede haber desaparecido; ya lo logueamos arriba */
+	}
+}
+
+const COLLECTOR_TIMEOUT = 30_000;
+const aprendiendo = new Set();
+
+async function handleUnknownCommand(message, textoSinPrefijo) {
+	const pregunta = textoSinPrefijo.trim();
+	if (!pregunta) return;
+
+	const guardada = respuestas.get(pregunta);
+	if (guardada) {
+		await message.channel.send(guardada);
 		return;
 	}
 
+	const claveSesion = `${message.channelId}:${message.author.id}`;
+	if (aprendiendo.has(claveSesion)) return;
+	aprendiendo.add(claveSesion);
+
+	let prompt;
 	try {
-		client.commands.get(command).execute(message, args);
+		prompt = await message.channel.send(
+			'No tengo una respuesta guardada para eso. ¿Cómo debería responder a esta pregunta?',
+		);
 	} catch (error) {
-		console.error(error);
+		aprendiendo.delete(claveSesion);
+		console.error(pc.red('[aprender] no pude preguntar:'), error.message);
+		return;
+	}
+
+	const collector = message.channel.createMessageCollector({
+		filter: (respuesta) =>
+			respuesta.author.id === message.author.id && !respuesta.author.bot,
+		time: COLLECTOR_TIMEOUT,
+		max: 1,
+	});
+
+	collector.on('collect', async (respuestaUsuario) => {
+		const limpia = respuestaUsuario.content.replaceAll(PREFIX, '').trim();
+
+		if (respuestaUsuario.content.includes(PREFIX) || limpia === '') {
+			await respuestaUsuario.reply('Esa respuesta está mal y no será guardada.');
+			return;
+		}
+
+		await respuestas.set(pregunta, limpia);
+		await respuestaUsuario.reply(
+			'¡Gracias por la respuesta! La guardaré para la próxima vez.',
+		);
+	});
+
+	collector.on('end', async (_collected, reason) => {
+		aprendiendo.delete(claveSesion);
+		if (reason === 'time') {
+			await message.channel
+				.send('Tiempo agotado. No se recibió respuesta :c')
+				.catch(() => {});
+		}
+		await prompt.delete().catch(() => {});
+	});
+}
+
+client.once('clientReady', () => {
+	client.user.setActivity(`Generar Bugs en ${client.guilds.cache.size} servidores`, {
+		type: ActivityType.Playing,
+	});
+	console.log(pc.green(`Conectada como ${client.user.tag}`));
+	console.log(
+		pc.gray(
+			`Prefijo "${PREFIX}" · ${client.commands.size} comandos · ` +
+				`${client.guilds.cache.size} servidores · ${respuestas.size} respuestas aprendidas`,
+		),
+	);
+});
+
+client.on('guildCreate', async (guild) => {
+	try {
+		const owner = await guild.fetchOwner();
+		await owner.send(
+			`¡Gracias! Podés usar \`${PREFIX} help\` para descubrir mis comandos.`,
+		);
+	} catch (error) {
+		console.warn(
+			pc.yellow(`[guildCreate] no pude saludar en ${guild.name}:`),
+			error.message,
+		);
 	}
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.on('messageCreate', async (message) => {
+	if (message.author.bot) return;
+
+	const contenido = message.content ?? '';
+	if (!contenido.toLowerCase().startsWith(PREFIX.toLowerCase())) return;
+
+	const origen = message.guild ? message.guild.name : 'DM';
+	console.log(
+		`${pc.green('[MENSAJE]')}${pc.green(`[${origen}]`)} ` +
+			`${pc.blue(message.author.username)}: ${contenido}`,
+	);
+
+	const sinPrefijo = contenido.slice(PREFIX.length);
+	const args = sinPrefijo.trim().split(/ +/);
+	const nombre = (args.shift() ?? '').toLowerCase();
+
+	const command = client.commands.get(nombre);
+
+	if (!command) {
+		await handleUnknownCommand(message, sinPrefijo).catch((error) =>
+			console.error(pc.red('[aprender] falló:'), error),
+		);
+		return;
+	}
+
+	const ctx = new Ctx({ client, message, args, command });
+	try {
+		await runCommand(command, ctx);
+	} catch (error) {
+		await reportError(ctx, error);
+	}
+});
+
+client.on('interactionCreate', async (interaction) => {
+	if (!interaction.isChatInputCommand()) return;
+
+	const command = client.commands.get(interaction.commandName);
+	if (!command) {
+		await interaction
+			.reply({ content: 'Ese comando ya no existe.', flags: MessageFlags.Ephemeral })
+			.catch(() => {});
+		return;
+	}
+
+	const origen = interaction.guild ? interaction.guild.name : 'DM';
+	console.log(
+		`${pc.magenta('[SLASH]')}${pc.green(`[${origen}]`)} ` +
+			`${pc.blue(interaction.user.username)}: /${interaction.commandName}`,
+	);
+
+	const ctx = new Ctx({ client, interaction, command });
+	try {
+		await runCommand(command, ctx);
+	} catch (error) {
+		await reportError(ctx, error);
+	}
+});
+
+respuestas.load();
+console.log(pc.gray(`Cargados ${loadCommands()} comandos.`));
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+	process.on(signal, () => {
+		console.log(pc.gray('\nCerrando…'));
+		client.destroy().finally(() => process.exit(0));
+	});
+}
+
+process.on('unhandledRejection', (error) => {
+	console.error(pc.red('[unhandledRejection]'), error);
+});
+
+client.login(TOKEN).catch((error) => {
+	console.error(pc.red('No pude iniciar sesión en Discord:'), error.message);
+	if (String(error.message).includes('disallowed intents')) {
+		console.error(
+			pc.yellow(
+				'Activá "MESSAGE CONTENT INTENT" en Discord Developer Portal >\n' +
+					'tu app > Bot > Privileged Gateway Intents.',
+			),
+		);
+	}
+	process.exit(1);
+});
+
+module.exports = { client, loadCommands };

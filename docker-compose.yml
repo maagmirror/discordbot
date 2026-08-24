@@ -1,0 +1,36 @@
+services:
+  bot:
+    build: .
+    image: maggybot:latest
+    container_name: maggybot
+    restart: unless-stopped
+    init: true
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      PREFIX: ${PREFIX:-maggy}
+      WEATHERAPI: ${WEATHERAPI:-}
+    volumes:
+      - bot-data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # One-off: registra los slash commands. No arranca con "up".
+  #   docker compose run --rm deploy
+  deploy:
+    build: .
+    image: maggybot:latest
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+    command: ["node", "deploy-commands.js"]
+    profiles: ["tools"]
+    restart: "no"
+
+volumes:
+  bot-data:
