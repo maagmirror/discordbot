@@ -2,6 +2,18 @@
 
 const musica = require("../lib/musica");
 
+/** La voz no quedó lista ni reintentando. Una sesión sin nada sonando se cierra. */
+async function noConecto(ctx, sesion, error) {
+  console.error("[play] conectar:", error.message);
+  if (!sesion.actual && sesion.cola.length === 0) {
+    sesion.destruir("no pude conectar a la voz");
+  }
+  const motivo = /aborted/i.test(error.message)
+    ? "Discord no completó la conexión a tiempo"
+    : error.message;
+  await ctx.reply(`No pude entrar al canal de voz (${motivo}). Probá de nuevo en un rato.`);
+}
+
 /** Playlist de YouTube o playlist/álbum/tema de Spotify. */
 async function reproducirLista(ctx, consulta, canalVoz) {
   let lista;
@@ -20,8 +32,7 @@ async function reproducirLista(ctx, consulta, canalVoz) {
   try {
     await sesion.conectar(canalVoz);
   } catch (error) {
-    console.error("[play] conectar:", error.message);
-    await ctx.reply(`No pude entrar al canal de voz: ${error.message}`);
+    await noConecto(ctx, sesion, error);
     return;
   }
 
@@ -113,10 +124,15 @@ module.exports = {
 
     try {
       await sesion.conectar(canalVoz);
+    } catch (error) {
+      await noConecto(ctx, sesion, error);
+      return;
+    }
+
+    try {
       sesion.agregar(pista);
     } catch (error) {
-      console.error("[play] conectar:", error.message);
-      await ctx.reply(`No pude entrar al canal de voz: ${error.message}`);
+      await ctx.reply(`No lo pude agregar: ${error.message}`);
       return;
     }
 
