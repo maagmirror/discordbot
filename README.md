@@ -120,7 +120,7 @@ Permisos mínimos: `Send Messages`, `Read Message History`, `Embed Links`,
 | `mata`      | Matá a alguien                                         |
 | `meme`      | Meme random en español                                 |
 | `ping`      | Pong + latencia                                        |
-| `play`      | Todavía no implementado                                |
+| `play`      | Tema por nombre o link; playlist de YouTube o Spotify |
 | `randomcat` | Un gatito random                                       |
 | `roll`      | Tirada de dado (`roll 20`)                             |
 | `status`    | Uptime y cantidad de servidores                        |
